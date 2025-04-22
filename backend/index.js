@@ -16,6 +16,10 @@ const corsOptions = {
 }
 app.use(cors(corsOptions));
 
+import userRoutes from "./routes/userRoutes.js"
+
+app.use("/api/user",userRoutes);
+
 app.get('/',(req,res)=>{
     res.send('Hello World');
 })

@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-export const authenticate = (req, res, next) => {
+export const authenticate = async(req, res, next) => {
     const token = req.cookies.token;
 
     if (!token) {
@@ -12,7 +12,13 @@ export const authenticate = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.user = decoded; // Attach user info to the request object
+        if (!decoded) {
+            return res.status(401).json({
+                message: "Invalid token",
+                success: false
+            })
+        }
+        req.id = decoded.id; 
         next();
     } catch (error) {
         res.status(400).json({

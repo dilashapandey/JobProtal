@@ -16,7 +16,7 @@ const corsOptions = {
 }
 app.use(cors(corsOptions));
 
-import userRoutes from "./routes/userRoutes.js"
+import userRoutes from "./routes/userRoute.js"
 
 app.use("/api/user",userRoutes);
 

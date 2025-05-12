@@ -7,7 +7,7 @@ export const authenticate = async(req, res, next) => {
         return res.status(401).json({
             message: "Access denied. No token provided.",
             success: false
-        });
+        }); 
     }
 
     try {

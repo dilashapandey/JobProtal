@@ -5,6 +5,7 @@ import { response } from "express";
 
 export const register = async(req,res)=>{
     try {
+        console.log(req.body);
         const {name, email, password, phone_no, role} = req.body;
 
         // Validate user input
@@ -24,7 +25,7 @@ export const register = async(req,res)=>{
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        const user = new user ({
+        const newuser = new user ({
             name,
             email, 
             password: hashedPassword,
@@ -35,11 +36,11 @@ export const register = async(req,res)=>{
             }
         })
 
-        await user.save();
+        await newuser.save();
 
         res.status(201).json({
             message: "user created",
-            user
+            newuser
         })
     } catch (error) {
         console.log(error);
@@ -50,14 +51,14 @@ export const register = async(req,res)=>{
     }    
 }
 
-export const login = async(req,res)=>{
+export const login = async (req, res) => {
     try {
-        const{email,password, role} = req.body;
+        const { email, password, role } = req.body;
 
         // Validate user input
-        if (!email || !password||!role) {
+        if (!email || !password || !role) {
             return res.status(400).json({
-                message: "Email and password are required.",
+                message: "Email, password, and role are required.",
                 success: false
             });
         }
@@ -80,32 +81,27 @@ export const login = async(req,res)=>{
             });
         }
 
-        //role
-        if (role =!existingUser.role) {
+        // Check role
+        if (role !== existingUser.role) {
             return res.status(401).json({
-                message: "account doesn't exist",
+                message: "Account doesn't exist for the specified role.",
                 success: false
             });
         }
 
         // Generate a JWT token
-        const token = jwt.sign({ id: existingUser._id}, 
-            process.env.JWT_SECRET, {
+        const token = jwt.sign({ id: existingUser._id }, process.env.JWT_SECRET, {
             expiresIn: "1d"
         });
 
-        // Send the token as a cookie
+        // Send the token as a cookie and include it in the response
         res.cookie("token", token, {
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000 // 1 day
         }).json({
-            message:`Welcome back ${existingUser.name}`,
-            success:true
-        });
-
-        res.status(200).json({
-            message: "Login successful.",
+            message: `Welcome back ${existingUser.name}`,
             success: true,
+            token, // Include the token in the response
             user: {
                 id: existingUser._id,
                 name: existingUser.name,
@@ -117,11 +113,11 @@ export const login = async(req,res)=>{
     } catch (error) {
         console.log(error);
         return res.status(500).json({
-            message:"Internal server error",
-            success:false
-        })
+            message: "Internal server error.",
+            success: false
+        });
     }
-}
+};
 
 export const logout = async (req, res) => {
     try {
@@ -139,7 +135,7 @@ export const updateProfile = async (req, res) =>{
         const { name, email, phone_no, bio, skills } = req.body;
         const file = req.file;
         let skillsArray= skills.split(",");
-        // Find the user by ID (assuming the user is authenticated and their ID is in req.user.id)
+        // Find the user by ID 
         const userId = req.id;
         const euser = await user.findById(userId);
 

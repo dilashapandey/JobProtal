@@ -90,7 +90,7 @@ export const login = async (req, res) => {
         }
 
         // Generate a JWT token
-        const token = jwt.sign({ id: existingUser._id }, process.env.JWT_SECRET, {
+        const token = jwt.sign({ id: existingUser._id }, process.env.SECRET_KEY, {
             expiresIn: "1d"
         });
 
@@ -130,13 +130,19 @@ export const logout = async (req, res) => {
     }
 }
 
-export const updateProfile = async (req, res) =>{
+export const updateProfile = async (req, res) => {
     try {
         const { name, email, phone_no, bio, skills } = req.body;
         const file = req.file;
-        let skillsArray= skills.split(",");
-        // Find the user by ID 
+        let skillsArray;
+
+        // Convert skills to an array if provided
+        if (skills) {
+            skillsArray = skills.split(",");
+        }
+
         const userId = req.id;
+        console.log(userId);
         const euser = await user.findById(userId);
 
         if (!euser) {
@@ -153,14 +159,33 @@ export const updateProfile = async (req, res) =>{
         euser.profile.bio = bio || euser.profile.bio;
         euser.profile.skills = skillsArray || euser.profile.skills;
 
+        // Update profile picture if a file is uploaded
+        if (file) {
+            euser.profile.profilePic = file.path; // Assuming multer saves the file path
+        }
+
         await euser.save();
+
+        // Create a new object for the response
+        const updatedUser = {
+            _id: euser._id,
+            fullname: euser.name,
+            email: euser.email,
+            phoneNumber: euser.phone_no,
+            role: euser.role,
+            profile: euser.profile
+        };
 
         res.status(200).json({
             message: "Profile updated successfully.",
             success: true,
-            euser
+            user: updatedUser
         });
     } catch (error) {
         console.log(error);
+        return res.status(500).json({
+            message: "Internal server error.",
+            success: false
+        });
     }
-}
+};
